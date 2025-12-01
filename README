@@ -1,0 +1,115 @@
+Ce projet démontre le déploiement complet de l’application PayMyBuddy à l’aide de Docker, Docker Compose et d’un registre privé Docker.
+L’objectif est de moderniser le déploiement, automatiser les environnements et améliorer la qualité des livraisons.
+
+Objectifs du projet
+
+Dockeriser l'application Spring Boot PayMyBuddy
+
+Déployer une base de données MySQL dans un conteneur
+
+Orchestrer les services avec docker-compose
+
+Gérer les versions via un registre privé Docker Registry
+
+Automatiser le déploiement et sécuriser les configurations
+
+Démontrer une architecture professionnelle pour un environnement DevOps
+
+🛠 Technologies utilisées
+Outil	Usage
+Docker	Conteneurisation du backend et de MySQL
+Docker Compose	Orchestration multi-conteneurs
+Spring Boot 2.7	Backend de l'application
+MySQL 8.0	Base de données
+Docker Registry	Stockage privé des images
+Ubuntu / DockerLabs	Environnement d’exécution
+
+
+🐳 Dockerfile du Backend
+FROM amazoncorretto:17-alpine
+
+WORKDIR /app
+
+COPY app.jar /app/app.jar
+
+EXPOSE 8080
+
+CMD ["java", "-jar", "app.jar"]
+
+🐳 docker-compose.yml
+version: "3.8"
+
+services:
+
+  paymybuddy-db:
+    image: localhost:5000/paymybuddy-db
+    container_name: paymybuddy-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: paymybuddy
+      MYSQL_USER: payuser
+      MYSQL_PASSWORD: paypass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d
+    networks:
+      - paynet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  paymybuddy-backend:
+    image: localhost:5000/paymybuddy-backend
+    container_name: paymybuddy-backend
+    depends_on:
+      paymybuddy-db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://paymybuddy-db:3306/paymybuddy
+      SPRING_DATASOURCE_USERNAME: payuser
+      SPRING_DATASOURCE_PASSWORD: paypass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+    networks:
+      - paynet
+
+volumes:
+  db_data:
+
+networks:
+  paynet:
+
+🗄 Registre Docker Privé
+1. Lancer le registre
+docker run -d -p 5000:5000 --name registry registry:2
+
+2. Tag des images
+docker tag paymybuddy-backend localhost:5000/paymybuddy-backend
+docker tag mysql:8.0 localhost:5000/paymybuddy-db
+
+3. Push au registre
+docker push localhost:5000/paymybuddy-backend
+docker push localhost:5000/paymybuddy-db
+
+4. Vérification
+curl http://localhost:5000/v2/_catalog
+
+▶️ Lancement de l'application
+docker compose down -v
+docker compose up -d
+docker ps
+
+
+Backend accessible via :
+
+http://node1-8080-xxxxx.play-with-docker.com
+
+
+(ou via le bouton PORTS dans DockerLabs)
+
