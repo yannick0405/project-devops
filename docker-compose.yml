@@ -1,4 +1,3 @@
-
 version: "3.8"
 
 services:
@@ -7,10 +6,10 @@ services:
     image: localhost:5000/paymybuddy-db
     container_name: paymybuddy-db
     environment:
-      MYSQL_ROOT_PASSWORD: rootpass
-      MYSQL_DATABASE: paymybuddy
-      MYSQL_USER: payuser
-      MYSQL_PASSWORD: paypass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
       - "3306:3306"
     volumes:
@@ -33,9 +32,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://paymybuddy-db:3306/paymybuddy
-      SPRING_DATASOURCE_USERNAME: payuser
-      SPRING_DATASOURCE_PASSWORD: paypass
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
     networks:
